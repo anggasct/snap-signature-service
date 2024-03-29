@@ -36,23 +36,23 @@
 
             const signatureInput = document.getElementById("signature");
             signatureInput.value = hmacSha512;
-
-            const copyButton = document.getElementById("copyButton");
-
-            copyButton.addEventListener("click", function () {
-                signatureInput.select();
-                navigator.clipboard.writeText(signatureInput.value).then(function () {
-                    console.log('copied');
-                    copyButton.textContent = 'Copied!';
-                    setTimeout(function () {
-                        copyButton.textContent = 'Copy';
-                    }, 500);
-                }).catch(function (error) {
-                    console.error("Unable to copy signature to clipboard:", error);
-                });
-            });
-
         }
+
+        const signatureInput = document.getElementById("signature");
+        const copyButton = document.getElementById("copyButton");
+
+        copyButton.addEventListener("click", function () {
+            signatureInput.select();
+            navigator.clipboard.writeText(signatureInput.value).then(function () {
+                console.log('copied');
+                copyButton.textContent = 'Copied!';
+                setTimeout(function () {
+                    copyButton.textContent = 'Copy';
+                }, 500);
+            }).catch(function (error) {
+                console.error("Unable to copy signature to clipboard:", error);
+            });
+        });
     </script>
 
     <style>
