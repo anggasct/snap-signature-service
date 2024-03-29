@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAP Signature</title>
+    <script src="curl.js"></script>
+    <script src="encrypt.js"></script>
+    <script defer>
+        async function genereateSignature() {
+            var curlInput = document.getElementById("curlInput").value;
+            const path = getCurlRelativePath(curlInput)
+            const payload = getCurlPayload(curlInput);
+            const hexPayload = await calculateSHA256Hex(minifyJSON(payload));
+            const { authorization, timestamp } = getCurlHeaders(curlInput);
+
+            const raw = {
+                method: 'POST',
+                path,
+                authorization: authorization.replace(/Bearer\s+/i, ''),
+                hexPayload,
+                timestamp
+            }
+
+            console.log('raw', raw);
+
+            const dataToSign = Object.values(raw).join(':');
+            console.log('dataToSign', dataToSign)
+
+            const secretKey = document.getElementById('secretInput').value
+            console.log('secretInput', secretKey)
+
+            const hmacSha512 = calculateHmacSha512Base64(dataToSign, secretKey);
+            console.log("HMAC-SHA512:", hmacSha512);
+
+            const signatureInput = document.getElementById("signature");
+            signatureInput.value = hmacSha512;
+
+            const copyButton = document.getElementById("copyButton");
+
+            copyButton.addEventListener("click", function () {
+                signatureInput.select();
+                navigator.clipboard.writeText(signatureInput.value).then(function () {
+                    console.log('copied');
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(function () {
+                        copyButton.textContent = 'Copy';
+                    }, 500);
+                }).catch(function (error) {
+                    console.error("Unable to copy signature to clipboard:", error);
+                });
+            });
+
+        }
+    </script>
+
+    <style>
+        body {
+            font-size: 16px;
+            width: 100%;
+            max-width: 756px;
+            margin: 0 auto;
+            padding: 5px;
+        }
+
+        #curlInput {
+            width: 100%;
+            font-size: inherit;
+        }
+
+        #secretInput {
+            width: 100%;
+            font-size: inherit;
+        }
+
+        #signatureContainer {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        #signature {
+            flex: 1;
+            width: 100%;
+            font-size: inherit;
+        }
+
+        @media only screen and (min-width: 756px) {
+            .container {
+                width: 50%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h3>SNAP Signature Service</h3>
+
+    <label for="curlInput">curl:</label> <br>
+    <textarea id="curlInput" rows="20" placeholder="Input Curl Command"></textarea><br>
+
+    <label for="secretInput">secret:</label> <br>
+    <input id="secretInput" placeholder="Input Secret" autocomplete="off" /> <br> <br>
+    <button onclick="genereateSignature()">Generate Signature</button> <br> <br>
+
+    <label for="signature">signature:</label>
+    <div id="signatureContainer">
+        <input type="text" id="signature" placeholder="" disabled>
+        <button id="copyButton" style="margin-left: 5px;">Copy</button>
+    </div>
+
+</body>
+
+</html>
